@@ -399,6 +399,56 @@ export async function changeAndSaveHue(
   }
 }
 
+//fixed
+// # ## Gamma
+// # Adjusts the gamma of the image.
+// #
+// # ### Arguments
+// # Range is from 0 to infinity, although sane values are from 0 to 4 or 5.
+// # Values between 0 and 1 will lessen the contrast while values greater than 1 will increase it.
+export async function changeAndSaveGamma(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value > 10 || value < 0) {
+    throw new Error("value must be between 0 and 10");
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+        let { r, g, b, a } = color;
+
+        // Apply gamma adjustment to each color channel
+        r = Math.pow(r / 255, value) * 255;
+        g = Math.pow(g / 255, value) * 255;
+        b = Math.pow(b / 255, value) * 255;
+
+        // Ensure the color values stay within the 0-255 range
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+        
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
 
 //not fixed yet
 export async function changeAndSaveWhites(
