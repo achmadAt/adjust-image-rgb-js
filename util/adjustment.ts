@@ -1,5 +1,6 @@
 import Jimp from "jimp";
 import { rgbToHsv, hsvToRgb, getLuminance } from "./convert.ts";
+import Calculate from "./calculate.ts";
 
 //fixed
 // # ## Brightness
@@ -562,6 +563,113 @@ export async function changeAndSaveSepia(
 }
 
 //fixed
+// # ## Noise
+// # Adds noise to the image on a scale from 1 - 100. However, the scale isn't constrained, so you 
+// # can specify a value > 100 if you want a LOT of noise.
+export async function changeAndSaveNoise(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < 0 || value > 100) {
+    throw new Error("value value must be between 0 and 100");
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    const adjust = Math.abs(value) * 2.55;
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+        let {r, g, b, a} = color;
+        // Generate random noise within the specified range for each channel
+        const rand = Calculate.randomRange(adjust * -1, adjust);
+
+        // Apply noise to each color channel
+        r += rand;
+        g += rand;
+        b += rand;
+
+        // Ensure the color values stay within the 0-255 range
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+
+//fixed
+// # ## Clip
+// # Clips a color to max values when it falls outside of the specified range.
+// #
+// # ### Arguments
+// # Supplied value should be between 0 and 100.
+export async function changeAndSaveClip(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < 0 || value > 100) {
+    throw new Error("value value must be between 0 and 100");
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    const adjust = Math.abs(value) * 2.55;
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+        let {r, g, b, a} = color;
+        // Clip the color values based on the adjustment factor
+        if (r > 255 - adjust) {
+          r = 255;
+        } else if (r < adjust) {
+          r = 0;
+        }
+
+        if (g > 255 - adjust) {
+          g = 255;
+        } else if (g < adjust) {
+          g = 0;
+        }
+
+        if (b > 255 - adjust) {
+          b = 255;
+        } else if (b < adjust) {
+          b = 0;
+        }
+
+
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+
+//fixed
 export async function changeAndSaveTemperature(
   inputImagePath: string,
   outputImagePath: string,
@@ -575,8 +683,6 @@ export async function changeAndSaveTemperature(
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
-    const normalizedvalue = value / 100; // Normalize to the range [0, 1]
-    console.log(normalizedvalue);
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
@@ -599,7 +705,7 @@ export async function changeAndSaveTemperature(
   }
 }
 
-//fixed
+//not fixed
 export async function changeAndSaveShadow(
   inputImagePath: string,
   outputImagePath: string,
@@ -639,6 +745,7 @@ export async function changeAndSaveShadow(
   }
 }
 
+//not fixed
 export async function changeAndSaveBlacks(inputImagePath: string, outputImagePath:string, value:number) {
   if (value < -100 || value > 100) {
     throw new Error("value value must be between -100 and 100");
