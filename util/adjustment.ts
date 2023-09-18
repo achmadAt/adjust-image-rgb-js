@@ -109,7 +109,7 @@ export async function changeAndSaveExposure(
 // }
 
 //fixed
-//using hsv trick value is -100 to 100
+//using hsv technique value is -100 to 100
 export async function changeAndSaveSaturationHSV(
   inputImagePath: string,
   outputImagePath: string,
@@ -301,6 +301,13 @@ export async function changeAndSaveGreyScale(
 }
 
 //fixed
+// # ## Contrast
+// # Increases or decreases the color contrast of the image.
+// #
+// # ### Arguments
+// # Range is -100 to 100. Values < 0 will decrease contrast while values > 0 will increase contrast.
+// # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values 
+// # are usually around 5-10.
 export async function changeAndSaveContrast(
   inputImagePath: string,
   outputImagePath: string,
@@ -314,7 +321,7 @@ export async function changeAndSaveContrast(
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
-    const contrastFactor = (value + 100) / 100;
+    const contrastFactor = Math.pow((value + 100) / 100, 2);
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -322,10 +329,16 @@ export async function changeAndSaveContrast(
 
         let { r, g, b, a } = color;
 
-        r = Math.min(255, Math.max(0, Math.floor((r - 128) * contrastFactor + 128)));
-        g = Math.min(255, Math.max(0, Math.floor((g - 128) * contrastFactor + 128)));
-        b = Math.min(255, Math.max(0, Math.floor((b - 128) * contrastFactor + 128)));
+        // Apply contrast adjustment to each color channel
+        r = (r / 255 - 0.5) * contrastFactor + 0.5;
+        g = (g / 255 - 0.5) * contrastFactor + 0.5;
+        b = (b / 255 - 0.5) * contrastFactor + 0.5;
 
+        // Ensure the color values stay within the 0-255 range
+        r = Math.min(255, Math.max(0, r * 255));
+        g = Math.min(255, Math.max(0, g * 255));
+        b = Math.min(255, Math.max(0, b * 255));
+        
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -339,7 +352,55 @@ export async function changeAndSaveContrast(
   }
 }
 
-//fixed
+
+// # ## Hue
+// # Adjusts the hue of the image. It can be used to shift the colors in an image in a uniform 
+// # fashion. If you are unfamiliar with Hue, I recommend reading this 
+// # [Wikipedia article](http://en.wikipedia.org/wiki/Hue).
+// #
+// # ### Arguments
+// # Range is 0 to 100
+// # Sometimes, Hue is expressed in the range of 0 to 360. If that's the terminology you're used to, 
+// # think of 0 to 100 representing the percentage of Hue shift in the 0 to 360 range.
+export async function changeAndSaveHue(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+    if (value > 100 || value < 0) {
+      throw new Error("value must be between 0 or 100");
+    }
+
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+        let { r, g, b, a } = color;
+        // console.log(color)
+        let hsv = rgbToHsv(r, g, b);
+        hsv.h *= 100
+        hsv.h += 100
+        hsv.h = hsv.h % 100
+        hsv.h /= 100
+        let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
+        const newColor = Jimp.rgbaToInt(data.r, data.g, data.b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+
+//not fixed yet
 export async function changeAndSaveWhites(
   inputImagePath: string,
   outputImagePath: string,
@@ -352,9 +413,6 @@ export async function changeAndSaveWhites(
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
-    // const whiteDelta = Math.min(100, Math.max(-100, value));
-    // const whiteFactor = 1 + whiteDelta / 100;
-    //const saturationFactor = Math.min(2, Math.max(0, value));
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
