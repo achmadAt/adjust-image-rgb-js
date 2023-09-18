@@ -436,6 +436,8 @@ export async function changeAndSaveWhites(
 }
 
 //fixed
+// # ## Invert
+// # Inverts all colors in the image by subtracting each color channel value from 255. No arguments.
 export async function changeAndSaveInvert(
   inputImagePath: string,
   outputImagePath: string
@@ -466,6 +468,11 @@ export async function changeAndSaveInvert(
 }
 
 //fixed
+// # ## Sepia
+// # Applies an adjustable sepia filter to the image.
+// #
+// # ### Arguments
+// # Assumes adjustment is between 0 and 100, which represents how much the sepia filter is applied.
 export async function changeAndSaveSepia(
   inputImagePath: string,
   outputImagePath: string,
@@ -486,12 +493,12 @@ export async function changeAndSaveSepia(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         // Apply sepia tone effect to the RGB values
-        const { r, g, b } = color;
-        const newR = Math.min(255, Math.floor((1 - normalizedvalue) * r + normalizedvalue * (0.393 * r + 0.769 * g + 0.189 * b)));
-        const newG = Math.min(255, Math.floor((1 - normalizedvalue) * g + normalizedvalue * (0.349 * r + 0.686 * g + 0.168 * b)));
-        const newB = Math.min(255, Math.floor((1 - normalizedvalue) * b + normalizedvalue * (0.272 * r + 0.534 * g + 0.131 * b)));
+        let { r, g, b, a } = color;
+        r = Math.min(255, (r * (1 - (0.607 * normalizedvalue))) + (g * (0.769 * normalizedvalue)) + (b * (0.189 * normalizedvalue)));
+        g = Math.min(255, (r * (0.349 * normalizedvalue)) + (g * (1 - (0.314 * normalizedvalue))) + (b * (0.168 * normalizedvalue)));
+        b = Math.min(255, (r * (0.272 * normalizedvalue)) + (g * (0.534 * normalizedvalue)) + (b * (1 - (0.869 * normalizedvalue))));
 
-        const newColor = Jimp.rgbaToInt(newR, newG, newB, color.a);
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
       }
