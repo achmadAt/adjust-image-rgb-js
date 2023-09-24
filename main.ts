@@ -1,10 +1,11 @@
 import {
     changeAndSaveBlacks,
-  changeAndSaveBrightnessLoop, changeAndSaveClip, changeAndSaveContrast, changeAndSaveExposure, changeAndSaveGamma, changeAndSaveHue, changeAndSaveNoise, changeAndSaveSaturationHSV, changeAndSaveSaturationRGB, changeAndSaveSepia, changeAndSaveShadow, changeAndSaveTemperature, changeAndSaveVibrance, changeAndSaveWhites,
+    changeAndSaveBrightnessLoop,
+    changeAndSaveClip, changeAndSaveExposure, changeAndSaveExposureV2, changeAndSaveGamma, changeAndSaveHue, changeAndSaveNoise, changeAndSaveShadow, changeAndSaveSharpness
 } from './util/adjustment.ts';
 // import Jimp from "jimp";
 // import { writeFile } from "fs";
-changeAndSaveClip('download.png', 'img10_edited.jpg', 0);
+changeAndSaveExposure('img10.jpg', 'img10_edited.jpg', 100);
 
 // async function Test(path) {
 //     const image = await Jimp.read(path)

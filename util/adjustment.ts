@@ -1,7 +1,7 @@
 import Jimp from "jimp";
 import { rgbToHsv, hsvToRgb, getLuminance } from "./convert.ts";
 import Calculate from "./calculate.ts";
-
+import Curves from "./curve.ts";
 //fixed
 // # ## Brightness
 // # Simple brightness adjustment
@@ -58,23 +58,132 @@ export async function changeAndSaveExposure(
     const image = await Jimp.read(inputImagePath);
 
     const exposureFactor = Math.pow(2, value / 100);
+    console.log(exposureFactor)
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-
+        // r = 255 * (1-Math.exp(-(r/255) * exposureFactor));
+        // g = 255 *(1-Math.exp(-(g/255) * exposureFactor));
+        // b = 255 *(1-Math.exp(-(b/255) * exposureFactor));
         r = Math.min(255, Math.max(0, Math.floor(r * exposureFactor)));
         g = Math.min(255, Math.max(0, Math.floor(g * exposureFactor)));
         b = Math.min(255, Math.max(0, Math.floor(b * exposureFactor)));
 
+  
+        // Ensure the color values stay within the 0-255 range
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
       }
     }
 
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+
+export async function changeAndSaveExposureV2(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < -100 || value > 100) {
+    throw new Error("Exposure value must be between -100 and 100");
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    const p = Math.abs(value) / 100;
+
+    let ctrl1 = [0, 255 * p];
+    let ctrl2 = [255 - (255 * p), 255];
+    console.log(ctrl1)
+    if (value < 0) {
+      ctrl1 = ctrl1.reverse();
+      ctrl2 = ctrl2.reverse();
+    }
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+        let { r, g, b, a } = color;
+        let data = Curves.curvesToRgbf('rgb', [0, 0], ctrl1, ctrl2, [255, 255])({"r": r, "g": g, "b": b})
+        r = Math.min(255, data.r)
+        g = Math.min(255, data.g)
+        b = Math.min(255, data.b)
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+export async function changeAndSaveSharpness(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < -100 || value > 100) {
+    throw new Error("Exposure value must be between -100 and 100");
+  }
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    let sharpenKernel: number[][];
+    
+    if (value === 0) {
+      // If the value is 0, no change to the image
+      sharpenKernel = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ];
+    } else if (value > 0) {
+      // If the value is positive, apply sharpening
+      const sharpeningFactor: number = (value / 100);
+      sharpenKernel = [
+        [-1, -1, -1],
+        [-1, 9 + sharpeningFactor, -1],
+        [-1, -1, -1],
+      ];
+    } else {
+      // If the value is negative, apply smoothing (blurring)
+      const smoothingFactor: number = (Math.abs(value) / 400);
+      sharpenKernel = [
+        [0, 1 - smoothingFactor, 0],
+        [0, 0, 0],
+        [0 +smoothingFactor, 0, 0],
+      ];
+    }
+
+    // Get the image data as a Buffer
+    const imageData: Buffer = image.bitmap.data;
+
+    // Width and height of the image
+    const width: number = image.bitmap.width;
+    const height: number = image.bitmap.height;
+
+    // Apply the custom convolution filter to sharpen the image
+    let data = Calculate.convolution(imageData, sharpenKernel, width, height);
+    image.bitmap.data = data
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
@@ -451,6 +560,7 @@ export async function changeAndSaveGamma(
 }
 
 
+
 //not fixed yet
 export async function changeAndSaveWhites(
   inputImagePath: string,
@@ -726,9 +836,9 @@ export async function changeAndSaveShadow(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        let red = Math.pow(r / 255, normalizedvalue) * 255;
-        let green = Math.pow(g / 255, normalizedvalue) * 255
-        let blue = Math.pow(b / 255, normalizedvalue) * 255;
+        let red = Math.pow(r / 255, 1 / normalizedvalue) * 255;
+        let green = Math.pow(g / 255, 1 / normalizedvalue) * 255
+        let blue = Math.pow(b / 255, 1 /normalizedvalue) * 255;
         r = Math.min(255, Math.max(0, red));
         g = Math.min(255, Math.max(0, green))
         b = Math.min(255, Math.max(0, blue));
