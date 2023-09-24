@@ -11,13 +11,13 @@ import Curves from "./curve.ts";
 export async function changeAndSaveBrightnessLoop(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value > 100 || value < -100) {
-    throw new Error("value must be between 100 or -100");
+    throw new Error('value must be between 100 or -100');
   }
   // for image brigthnes value from -100 to 100
-  const brightnessFactor = Math.floor((value/ 100) * 255);
+  const brightnessFactor = Math.floor((value / 100) * 255);
   console.log(brightnessFactor);
   try {
     const image = await Jimp.read(inputImagePath);
@@ -27,9 +27,9 @@ export async function changeAndSaveBrightnessLoop(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        r = Math.min(255, Math.max(0,r + brightnessFactor));
-        g = Math.min(255, Math.max(0,g + brightnessFactor));
-        b = Math.min(255, Math.max(0,b + brightnessFactor));
+        r = Math.min(255, Math.max(0, r + brightnessFactor));
+        g = Math.min(255, Math.max(0, g + brightnessFactor));
+        b = Math.min(255, Math.max(0, b + brightnessFactor));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -39,7 +39,7 @@ export async function changeAndSaveBrightnessLoop(
     await image.writeAsync(outputImagePath);
     console.log(`sucess`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -47,10 +47,10 @@ export async function changeAndSaveBrightnessLoop(
 export async function changeAndSaveExposure(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < -100 || value > 100) {
-    throw new Error("Exposure value must be between -100 and 100");
+    throw new Error('Exposure value must be between -100 and 100');
   }
 
   try {
@@ -86,7 +86,7 @@ export async function changeAndSaveExposure(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -196,20 +196,20 @@ export async function changeAndSaveSharpness(
 //   output,
 //   brightness
 // ) {
-  // var canvas = document.createElement("canvas");
-  // canvas.id = "hello";
-  // var context = canvas.getContext("2d");
-  // var img = new Image();
-  // img.onload = function () {
-  //   context.drawImage(img, 0, 0);
-  //   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  //   var { r, g, b } = imageData.data;
-  //   for (var i = 0; i < data.length; i += 4) {
-  //     r += brightness; // increase red
-  //     g += brightness; // increase green
-  //     b += brightness; // increase blue
-  //   }
-  //   context.putImageData(imageData, 0, 0);
+// var canvas = document.createElement("canvas");
+// canvas.id = "hello";
+// var context = canvas.getContext("2d");
+// var img = new Image();
+// img.onload = function () {
+//   context.drawImage(img, 0, 0);
+//   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+//   var { r, g, b } = imageData.data;
+//   for (var i = 0; i < data.length; i += 4) {
+//     r += brightness; // increase red
+//     g += brightness; // increase green
+//     b += brightness; // increase blue
+//   }
+//   context.putImageData(imageData, 0, 0);
 //     var link = document.createElement("a");
 //     link.download = output;
 //     link.href = canvas.toDataURL("image/jpeg");
@@ -223,13 +223,13 @@ export async function changeAndSaveSharpness(
 export async function changeAndSaveSaturationHSV(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
     if (value > 100 || value < -100) {
-      throw new Error("value must be between 100 or -100");
+      throw new Error('value must be between 100 or -100');
     }
     // const saturationDelta = Math.min(100, Math.max(-100, value));
     // const saturationFactor = saturationDelta;
@@ -253,7 +253,7 @@ export async function changeAndSaveSaturationHSV(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -263,20 +263,20 @@ export async function changeAndSaveSaturationHSV(
 // #
 // # ### Arguments
 // # Range is -100 to 100. Values < 0 will desaturate the image while values > 0 will saturate it.
-// # **If you want to completely desaturate the image**, using the greyscale filter is highly 
+// # **If you want to completely desaturate the image**, using the greyscale filter is highly
 // # recommended because it will yield better results.
 export async function changeAndSaveSaturationRGB(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
     if (value > 100 || value < -100) {
-      throw new Error("value must be between 100 or -100");
+      throw new Error('value must be between 100 or -100');
     }
-    
+
     const saturationCorrection = value * -0.01;
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -288,7 +288,7 @@ export async function changeAndSaveSaturationRGB(
         if (r !== max) r += (max - r) * saturationCorrection;
         if (g !== max) g += (max - g) * saturationCorrection;
         if (b !== max) b += (max - b) * saturationCorrection;
-        
+
         r = Math.min(255, Math.max(0, r));
         g = Math.min(255, Math.max(0, g));
         b = Math.min(255, Math.max(0, b));
@@ -302,32 +302,31 @@ export async function changeAndSaveSaturationRGB(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
-
 // # ## Vibrance
-// # Similar to saturation, but adjusts the saturation levels in a slightly smarter, more subtle way. 
+// # Similar to saturation, but adjusts the saturation levels in a slightly smarter, more subtle way.
 // # Vibrance will attempt to boost colors that are less saturated more and boost already saturated
 // # colors less, while saturation boosts all colors by the same level.
 // #
 // # ### Arguments
 // # Range is -100 to 100. Values < 0 will desaturate the image while values > 0 will saturate it.
-// # **If you want to completely desaturate the image**, using the greyscale filter is highly 
+// # **If you want to completely desaturate the image**, using the greyscale filter is highly
 // # recommended because it will yield better results.
 export async function changeAndSaveVibrance(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
     if (value > 100 || value < -100) {
-      throw new Error("value must be between 100 or -100");
+      throw new Error('value must be between 100 or -100');
     }
-    
+
     const vibranceCorrection = value * -1;
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -342,7 +341,8 @@ export async function changeAndSaveVibrance(
         const avg = (r + g + b) / 3;
 
         // Calculate the vibrance adjustment amount
-        const amt = ((Math.abs(max - avg) * 2 / 255) * vibranceCorrection) / 100;
+        const amt =
+          (((Math.abs(max - avg) * 2) / 255) * vibranceCorrection) / 100;
 
         // Apply vibrance adjustment to each color channel
         if (r !== max) r += (max - r) * amt;
@@ -354,7 +354,6 @@ export async function changeAndSaveVibrance(
         g = Math.min(255, Math.max(0, g));
         b = Math.min(255, Math.max(0, b));
 
-
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -364,7 +363,7 @@ export async function changeAndSaveVibrance(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -379,12 +378,11 @@ export async function changeAndSaveVibrance(
 // # Algorithm adopted from http://www.phpied.com/image-fun/
 export async function changeAndSaveGreyScale(
   inputImagePath: string,
-  outputImagePath: string
+  outputImagePath: string,
 ) {
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
-
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -406,7 +404,7 @@ export async function changeAndSaveGreyScale(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -416,15 +414,15 @@ export async function changeAndSaveGreyScale(
 // #
 // # ### Arguments
 // # Range is -100 to 100. Values < 0 will decrease contrast while values > 0 will increase contrast.
-// # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values 
+// # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values
 // # are usually around 5-10.
 export async function changeAndSaveContrast(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value > 100 || value < -100) {
-    throw new Error("value must be between -100 and 100");
+    throw new Error('value must be between -100 and 100');
   }
 
   try {
@@ -448,7 +446,7 @@ export async function changeAndSaveContrast(
         r = Math.min(255, Math.max(0, r * 255));
         g = Math.min(255, Math.max(0, g * 255));
         b = Math.min(255, Math.max(0, b * 255));
-        
+
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -458,30 +456,29 @@ export async function changeAndSaveContrast(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
-
 // # ## Hue
-// # Adjusts the hue of the image. It can be used to shift the colors in an image in a uniform 
-// # fashion. If you are unfamiliar with Hue, I recommend reading this 
+// # Adjusts the hue of the image. It can be used to shift the colors in an image in a uniform
+// # fashion. If you are unfamiliar with Hue, I recommend reading this
 // # [Wikipedia article](http://en.wikipedia.org/wiki/Hue).
 // #
 // # ### Arguments
 // # Range is 0 to 100
-// # Sometimes, Hue is expressed in the range of 0 to 360. If that's the terminology you're used to, 
+// # Sometimes, Hue is expressed in the range of 0 to 360. If that's the terminology you're used to,
 // # think of 0 to 100 representing the percentage of Hue shift in the 0 to 360 range.
 export async function changeAndSaveHue(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
     if (value > 100 || value < 0) {
-      throw new Error("value must be between 0 or 100");
+      throw new Error('value must be between 0 or 100');
     }
 
     for (let x = 0; x < image.bitmap.width; x++) {
@@ -491,10 +488,10 @@ export async function changeAndSaveHue(
         let { r, g, b, a } = color;
         // console.log(color)
         let hsv = rgbToHsv(r, g, b);
-        hsv.h *= 100
-        hsv.h += 100
-        hsv.h = hsv.h % 100
-        hsv.h /= 100
+        hsv.h *= 100;
+        hsv.h += 100;
+        hsv.h = hsv.h % 100;
+        hsv.h /= 100;
         let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
         const newColor = Jimp.rgbaToInt(data.r, data.g, data.b, a);
 
@@ -505,7 +502,7 @@ export async function changeAndSaveHue(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -519,16 +516,15 @@ export async function changeAndSaveHue(
 export async function changeAndSaveGamma(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value > 10 || value < 0) {
-    throw new Error("value must be between 0 and 10");
+    throw new Error('value must be between 0 and 10');
   }
 
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
-
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -545,7 +541,7 @@ export async function changeAndSaveGamma(
         r = Math.min(255, Math.max(0, r));
         g = Math.min(255, Math.max(0, g));
         b = Math.min(255, Math.max(0, b));
-        
+
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -555,7 +551,7 @@ export async function changeAndSaveGamma(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -565,15 +561,14 @@ export async function changeAndSaveGamma(
 export async function changeAndSaveWhites(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value > 100 || value < -100) {
-    throw new Error("value must be between -100 and 100");
+    throw new Error('value must be between -100 and 100');
   }
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
-
 
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
@@ -592,7 +587,7 @@ export async function changeAndSaveWhites(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -601,7 +596,7 @@ export async function changeAndSaveWhites(
 // # Inverts all colors in the image by subtracting each color channel value from 255. No arguments.
 export async function changeAndSaveInvert(
   inputImagePath: string,
-  outputImagePath: string
+  outputImagePath: string,
 ) {
   try {
     // Read the input image using Jimp
@@ -624,7 +619,7 @@ export async function changeAndSaveInvert(
     await image.writeAsync(outputImagePath);
     console.log(`success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -637,10 +632,10 @@ export async function changeAndSaveInvert(
 export async function changeAndSaveSepia(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < 0 || value > 100) {
-    throw new Error("value value must be between 0 and 100");
+    throw new Error('value value must be between 0 and 100');
   }
 
   try {
@@ -655,9 +650,24 @@ export async function changeAndSaveSepia(
 
         // Apply sepia tone effect to the RGB values
         let { r, g, b, a } = color;
-        r = Math.min(255, (r * (1 - (0.607 * normalizedvalue))) + (g * (0.769 * normalizedvalue)) + (b * (0.189 * normalizedvalue)));
-        g = Math.min(255, (r * (0.349 * normalizedvalue)) + (g * (1 - (0.314 * normalizedvalue))) + (b * (0.168 * normalizedvalue)));
-        b = Math.min(255, (r * (0.272 * normalizedvalue)) + (g * (0.534 * normalizedvalue)) + (b * (1 - (0.869 * normalizedvalue))));
+        r = Math.min(
+          255,
+          r * (1 - 0.607 * normalizedvalue) +
+            g * (0.769 * normalizedvalue) +
+            b * (0.189 * normalizedvalue),
+        );
+        g = Math.min(
+          255,
+          r * (0.349 * normalizedvalue) +
+            g * (1 - 0.314 * normalizedvalue) +
+            b * (0.168 * normalizedvalue),
+        );
+        b = Math.min(
+          255,
+          r * (0.272 * normalizedvalue) +
+            g * (0.534 * normalizedvalue) +
+            b * (1 - 0.869 * normalizedvalue),
+        );
 
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
@@ -668,21 +678,21 @@ export async function changeAndSaveSepia(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
 //fixed
 // # ## Noise
-// # Adds noise to the image on a scale from 1 - 100. However, the scale isn't constrained, so you 
+// # Adds noise to the image on a scale from 1 - 100. However, the scale isn't constrained, so you
 // # can specify a value > 100 if you want a LOT of noise.
 export async function changeAndSaveNoise(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < 0 || value > 100) {
-    throw new Error("value value must be between 0 and 100");
+    throw new Error('value value must be between 0 and 100');
   }
 
   try {
@@ -693,7 +703,7 @@ export async function changeAndSaveNoise(
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-        let {r, g, b, a} = color;
+        let { r, g, b, a } = color;
         // Generate random noise within the specified range for each channel
         const rand = Calculate.randomRange(adjust * -1, adjust);
 
@@ -716,10 +726,9 @@ export async function changeAndSaveNoise(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
-
 
 //fixed
 // # ## Clip
@@ -730,10 +739,10 @@ export async function changeAndSaveNoise(
 export async function changeAndSaveClip(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < 0 || value > 100) {
-    throw new Error("value value must be between 0 and 100");
+    throw new Error('value value must be between 0 and 100');
   }
 
   try {
@@ -744,7 +753,7 @@ export async function changeAndSaveClip(
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-        let {r, g, b, a} = color;
+        let { r, g, b, a } = color;
         // Clip the color values based on the adjustment factor
         if (r > 255 - adjust) {
           r = 255;
@@ -764,7 +773,6 @@ export async function changeAndSaveClip(
           b = 0;
         }
 
-
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -774,19 +782,18 @@ export async function changeAndSaveClip(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
-
 
 //fixed
 export async function changeAndSaveTemperature(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < -100 || value > 100) {
-    throw new Error("value value must be between -100 and 100");
+    throw new Error('value value must be between -100 and 100');
   }
 
   try {
@@ -811,7 +818,7 @@ export async function changeAndSaveTemperature(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
@@ -819,10 +826,10 @@ export async function changeAndSaveTemperature(
 export async function changeAndSaveShadow(
   inputImagePath: string,
   outputImagePath: string,
-  value: number
+  value: number,
 ) {
   if (value < -100 || value > 100) {
-    throw new Error("value value must be between -100 and 100");
+    throw new Error('value value must be between -100 and 100');
   }
 
   try {
@@ -840,7 +847,7 @@ export async function changeAndSaveShadow(
         let green = Math.pow(g / 255, 1 / normalizedvalue) * 255
         let blue = Math.pow(b / 255, 1 /normalizedvalue) * 255;
         r = Math.min(255, Math.max(0, red));
-        g = Math.min(255, Math.max(0, green))
+        g = Math.min(255, Math.max(0, green));
         b = Math.min(255, Math.max(0, blue));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
@@ -851,14 +858,18 @@ export async function changeAndSaveShadow(
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
 //not fixed
-export async function changeAndSaveBlacks(inputImagePath: string, outputImagePath:string, value:number) {
+export async function changeAndSaveBlacks(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
   if (value < -100 || value > 100) {
-    throw new Error("value value must be between -100 and 100");
+    throw new Error('value value must be between -100 and 100');
   }
 
   try {
@@ -873,10 +884,10 @@ export async function changeAndSaveBlacks(inputImagePath: string, outputImagePat
 
         let { r, g, b, a } = color;
         let red = (r / 255) * normalizedvalue * 255;
-        let green = (g / 255) * normalizedvalue * 255
+        let green = (g / 255) * normalizedvalue * 255;
         let blue = (b / 255) * normalizedvalue * 255;
         r = Math.min(255, Math.max(0, red));
-        g = Math.min(255, Math.max(0, green))
+        g = Math.min(255, Math.max(0, green));
         b = Math.min(255, Math.max(0, blue));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
@@ -887,6 +898,6 @@ export async function changeAndSaveBlacks(inputImagePath: string, outputImagePat
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
