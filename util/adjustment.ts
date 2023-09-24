@@ -158,7 +158,7 @@ export async function changeAndSaveSharpness(
       ];
     } else if (value > 0) {
       // If the value is positive, apply sharpening
-      const sharpeningFactor: number = (value / 100);
+      const sharpeningFactor: number = (value / 400);
       sharpenKernel = [
         [-1, -1, -1],
         [-1, 9 + sharpeningFactor, -1],
