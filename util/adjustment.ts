@@ -170,7 +170,7 @@ export async function changeAndSaveSharpness(
       sharpenKernel = [
         [0, 1 - smoothingFactor, 0],
         [0, 0, 0],
-        [0 +smoothingFactor, 0, 0],
+        [0 + smoothingFactor, 0, 0],
       ];
     }
 
@@ -795,6 +795,10 @@ export async function changeAndSaveTemperature(
   if (value < -100 || value > 100) {
     throw new Error('value value must be between -100 and 100');
   }
+  const temperature = Math.max(-100, Math.min(100, value));
+  const redFactor = temperature / 100;
+  const blueFactor = -temperature / 100;
+
 
   try {
     // Read the input image using Jimp
@@ -805,8 +809,8 @@ export async function changeAndSaveTemperature(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        let red = r + value;
-        let blue = b + value;
+        let red = r * redFactor;
+        let blue = b * blueFactor;
         r = Math.min(255, Math.max(0, red));
         b = Math.min(255, Math.max(0, blue));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
