@@ -600,7 +600,7 @@ static async changeAndSaveWhites(
 
         let { r, g, b, a } = color;
         let hsv = rgbToHsv(r, g, b);
-        hsv.v = Math.min(1, Math.max(0, hsv.v + value / 100));
+        hsv.v = Math.min(1, Math.max(0, hsv.v + value / 500));
         let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
         const newColor = Jimp.rgbaToInt(data.r, data.g, data.b, a);
 
@@ -855,6 +855,7 @@ static async changeAndSaveClip(
 }
 
 //fixed
+// param value -100 to 100
 static async changeAndSaveTemperature(
   inputImagePath: string,
   outputImagePath: string,
@@ -890,7 +891,8 @@ static async changeAndSaveTemperature(
   }
 }
 
-//not fixed
+// fixed
+//param value -100 to 100
 static async changeAndSaveShadow(
   inputImagePath: string,
   outputImagePath: string,
