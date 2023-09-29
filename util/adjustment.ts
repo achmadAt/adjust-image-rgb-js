@@ -148,7 +148,6 @@ static async changeAndSaveSharpness(
   if (value < -100 || value > 100) {
     throw new Error("Exposure value must be between -100 and 100");
   }
-  value
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
@@ -198,6 +197,60 @@ static async changeAndSaveSharpness(
 }
 
 
+static async changeAndSaveClarity(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < -100 || value > 100) {
+    throw new Error("Exposure value must be between -100 and 100");
+  }
+  value
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    let clarityKernel: number[][];
+    value /= 80
+    if (value === 0) {
+      // If the value is 0, no change to the image
+      clarityKernel = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ];
+    } else if (value > 0) {
+      // If the value is positive, apply clarity
+      clarityKernel = [ 
+        [0 , -0.5, 0 + Math.abs(value) / 5],
+        [-0.5 + Math.abs(value) / 50, 2.9, -0.5  + Math.abs(value) / 50],
+        [0, -0.5, 0]
+    ];
+    } else {
+      // If the value is negative, apply smoothing (blurring)
+      clarityKernel = [
+        [0.1, 0.1, 0.1],
+        [0.1, 0.19 + Math.abs(value) / 50, 0.1],
+        [0.1, 0.1, 0.1]
+      ];
+    }
+
+    // Get the image data as a Buffer
+    let imageData: Buffer = image.bitmap.data;
+
+    // Width and height of the image
+    const width: number = image.bitmap.width;
+    const height: number = image.bitmap.height;
+    // Apply the custom convolution filter to sharpen the image
+    let data = Calculate.convolution(imageData, clarityKernel, width, height);
+    imageData = data
+    image.bitmap.data = imageData
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
 
 //fixed
 //using hsv technique value is -100 to 100
@@ -713,49 +766,7 @@ static async changeAndSaveNoise(
   }
 }
 
-static async changeAndSaveClarity(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number,
-) {
-  if (value < -100 || value > 100) {
-    throw new Error('value value must be between -100 and 100');
-  }
 
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-
-    const adjust = Math.abs(value) * 1.20;
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-        let { r, g, b, a } = color;
-        // Generate random noise within the specified range for each channel
-        const rand = Calculate.randomRange(adjust * 2 -1, adjust);
-
-        // Apply noise to each color channel
-        r += rand;
-        g += rand;
-        b += rand;
-
-        // Ensure the color values stay within the 0-255 range
-        r = Math.min(255, Math.max(0, r));
-        g = Math.min(255, Math.max(0, g));
-        b = Math.min(255, Math.max(0, b));
-
-        const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`Success`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 //fixed
 // # ## Clip
