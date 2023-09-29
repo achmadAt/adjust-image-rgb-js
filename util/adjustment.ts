@@ -2,13 +2,15 @@ import Jimp from "jimp";
 import { rgbToHsv, hsvToRgb, getLuminance } from "./convert.ts";
 import Calculate from "./calculate.ts";
 import Curves from "./curve.ts";
+
+class Adjustment {
 //fixed
 // # ## Brightness
 // # Simple brightness adjustment
 // #
 // # ### Arguments
 // # Range is -100 to 100. Values < 0 will darken image while values > 0 will brighten.
-export async function changeAndSaveBrightnessLoop(
+static async changeAndSaveBrightnessLoop(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -44,7 +46,7 @@ export async function changeAndSaveBrightnessLoop(
 }
 
 //fixed
-export async function changeAndSaveExposure(
+static async changeAndSaveExposure(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -91,7 +93,7 @@ export async function changeAndSaveExposure(
 }
 
 
-export async function changeAndSaveExposureV2(
+static async changeAndSaveExposureV2(
   inputImagePath: string,
   outputImagePath: string,
   value: number
@@ -135,7 +137,28 @@ export async function changeAndSaveExposureV2(
   }
 }
 
-export async function changeAndSaveSharpness(
+static async changeAndSaveSharpnessV2(inputImagePath: string, outputImagePath: string) {
+  const matrix1D = [0, -0.2, 0, -0.2, 1.8, -0.2, 0, -0.2, 0]
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath)
+    const imageData: Buffer = image.bitmap.data;
+    // Width and height of the image
+    const width: number = image.bitmap.width;
+    const height: number = image.bitmap.height;
+
+    let data = Calculate.convolutionV2(imageData, matrix1D, width, height)
+    image.bitmap.data = data
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+
+static async changeAndSaveSharpness(
   inputImagePath: string,
   outputImagePath: string,
   value: number
@@ -191,7 +214,7 @@ export async function changeAndSaveSharpness(
   }
 }
 
-// export async function changeAndSaveBrightnessCanvas(
+// static async changeAndSaveBrightnessCanvas(
 //   inputImage,
 //   output,
 //   brightness
@@ -220,7 +243,7 @@ export async function changeAndSaveSharpness(
 
 //fixed
 //using hsv technique value is -100 to 100
-export async function changeAndSaveSaturationHSV(
+static async changeAndSaveSaturationHSV(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -265,7 +288,7 @@ export async function changeAndSaveSaturationHSV(
 // # Range is -100 to 100. Values < 0 will desaturate the image while values > 0 will saturate it.
 // # **If you want to completely desaturate the image**, using the greyscale filter is highly
 // # recommended because it will yield better results.
-export async function changeAndSaveSaturationRGB(
+static async changeAndSaveSaturationRGB(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -281,7 +304,6 @@ export async function changeAndSaveSaturationRGB(
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
         let { r, g, b, a } = color;
         // console.log(color)
         const max = Math.max(r, g, b);
@@ -315,7 +337,7 @@ export async function changeAndSaveSaturationRGB(
 // # Range is -100 to 100. Values < 0 will desaturate the image while values > 0 will saturate it.
 // # **If you want to completely desaturate the image**, using the greyscale filter is highly
 // # recommended because it will yield better results.
-export async function changeAndSaveVibrance(
+static async changeAndSaveVibrance(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -376,7 +398,7 @@ export async function changeAndSaveVibrance(
 // # no arguments, it simply makes the image greyscale with no in-between.
 // #
 // # Algorithm adopted from http://www.phpied.com/image-fun/
-export async function changeAndSaveGreyScale(
+static async changeAndSaveGreyScale(
   inputImagePath: string,
   outputImagePath: string,
 ) {
@@ -416,7 +438,7 @@ export async function changeAndSaveGreyScale(
 // # Range is -100 to 100. Values < 0 will decrease contrast while values > 0 will increase contrast.
 // # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values
 // # are usually around 5-10.
-export async function changeAndSaveContrast(
+static async changeAndSaveContrast(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -460,6 +482,8 @@ export async function changeAndSaveContrast(
   }
 }
 
+
+
 // # ## Hue
 // # Adjusts the hue of the image. It can be used to shift the colors in an image in a uniform
 // # fashion. If you are unfamiliar with Hue, I recommend reading this
@@ -469,7 +493,7 @@ export async function changeAndSaveContrast(
 // # Range is 0 to 100
 // # Sometimes, Hue is expressed in the range of 0 to 360. If that's the terminology you're used to,
 // # think of 0 to 100 representing the percentage of Hue shift in the 0 to 360 range.
-export async function changeAndSaveHue(
+static async changeAndSaveHue(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -513,7 +537,7 @@ export async function changeAndSaveHue(
 // # ### Arguments
 // # Range is from 0 to infinity, although sane values are from 0 to 4 or 5.
 // # Values between 0 and 1 will lessen the contrast while values greater than 1 will increase it.
-export async function changeAndSaveGamma(
+static async changeAndSaveGamma(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -558,7 +582,7 @@ export async function changeAndSaveGamma(
 
 
 //not fixed yet
-export async function changeAndSaveWhites(
+static async changeAndSaveWhites(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -594,7 +618,7 @@ export async function changeAndSaveWhites(
 //fixed
 // # ## Invert
 // # Inverts all colors in the image by subtracting each color channel value from 255. No arguments.
-export async function changeAndSaveInvert(
+static async changeAndSaveInvert(
   inputImagePath: string,
   outputImagePath: string,
 ) {
@@ -629,7 +653,7 @@ export async function changeAndSaveInvert(
 // #
 // # ### Arguments
 // # Assumes adjustment is between 0 and 100, which represents how much the sepia filter is applied.
-export async function changeAndSaveSepia(
+static async changeAndSaveSepia(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -686,7 +710,7 @@ export async function changeAndSaveSepia(
 // # ## Noise
 // # Adds noise to the image on a scale from 1 - 100. However, the scale isn't constrained, so you
 // # can specify a value > 100 if you want a LOT of noise.
-export async function changeAndSaveNoise(
+static async changeAndSaveNoise(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -730,13 +754,57 @@ export async function changeAndSaveNoise(
   }
 }
 
+static async changeAndSaveClarity(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  if (value < -100 || value > 100) {
+    throw new Error('value value must be between -100 and 100');
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    const adjust = Math.abs(value) * 1.20;
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+        let { r, g, b, a } = color;
+        // Generate random noise within the specified range for each channel
+        const rand = Calculate.randomRange(adjust * 2 -1, adjust);
+
+        // Apply noise to each color channel
+        r += rand;
+        g += rand;
+        b += rand;
+
+        // Ensure the color values stay within the 0-255 range
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
 //fixed
 // # ## Clip
 // # Clips a color to max values when it falls outside of the specified range.
 // #
 // # ### Arguments
 // # Supplied value should be between 0 and 100.
-export async function changeAndSaveClip(
+static async changeAndSaveClip(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -787,7 +855,7 @@ export async function changeAndSaveClip(
 }
 
 //fixed
-export async function changeAndSaveTemperature(
+static async changeAndSaveTemperature(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -795,11 +863,7 @@ export async function changeAndSaveTemperature(
   if (value < -100 || value > 100) {
     throw new Error('value value must be between -100 and 100');
   }
-  const temperature = Math.max(-100, Math.min(100, value));
-  const redFactor = temperature / 100;
-  const blueFactor = -temperature / 100;
-
-
+ 
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
@@ -809,8 +873,8 @@ export async function changeAndSaveTemperature(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        let red = r * redFactor;
-        let blue = b * blueFactor;
+        let red = r + value;
+        let blue = b - value;
         r = Math.min(255, Math.max(0, red));
         b = Math.min(255, Math.max(0, blue));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
@@ -827,7 +891,7 @@ export async function changeAndSaveTemperature(
 }
 
 //not fixed
-export async function changeAndSaveShadow(
+static async changeAndSaveShadow(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -866,8 +930,9 @@ export async function changeAndSaveShadow(
   }
 }
 
-//not fixed
-export async function changeAndSaveBlacks(
+//fixed
+// ## value param -100 to 100
+static async changeAndSaveBlacks(
   inputImagePath: string,
   outputImagePath: string,
   value: number,
@@ -887,12 +952,18 @@ export async function changeAndSaveBlacks(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        let red = (r / 255) * normalizedvalue * 255;
-        let green = (g / 255) * normalizedvalue * 255;
-        let blue = (b / 255) * normalizedvalue * 255;
-        r = Math.min(255, Math.max(0, red));
-        g = Math.min(255, Math.max(0, green));
-        b = Math.min(255, Math.max(0, blue));
+        // Calculate the luminance (brightness) of the pixel
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        // Calculate the new luminance after adjusting the blacks
+        const newLuminance = Math.min(255, Math.max(0, luminance + value));
+
+        // Calculate the scaling factor to maintain the color ratio
+        const scalingFactor = newLuminance / luminance;
+        
+        r = Math.min(255, r * scalingFactor);
+        g = Math.min(255, g * scalingFactor);
+        b = Math.min(255, b * scalingFactor);
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
         image.setPixelColor(newColor, x, y);
@@ -905,3 +976,7 @@ export async function changeAndSaveBlacks(
     console.error('Error:', error);
   }
 }
+
+}
+
+export default Adjustment;
