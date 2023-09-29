@@ -137,25 +137,7 @@ static async changeAndSaveExposureV2(
   }
 }
 
-static async changeAndSaveSharpnessV2(inputImagePath: string, outputImagePath: string) {
-  const matrix1D = [0, -0.2, 0, -0.2, 1.8, -0.2, 0, -0.2, 0]
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath)
-    const imageData: Buffer = image.bitmap.data;
-    // Width and height of the image
-    const width: number = image.bitmap.width;
-    const height: number = image.bitmap.height;
 
-    let data = Calculate.convolutionV2(imageData, matrix1D, width, height)
-    image.bitmap.data = data
-
-    await image.writeAsync(outputImagePath);
-    console.log(`Success`);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
 
 
 static async changeAndSaveSharpness(
@@ -166,12 +148,13 @@ static async changeAndSaveSharpness(
   if (value < -100 || value > 100) {
     throw new Error("Exposure value must be between -100 and 100");
   }
+  value
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
     let sharpenKernel: number[][];
-    
+    value /= 50
     if (value === 0) {
       // If the value is 0, no change to the image
       sharpenKernel = [
@@ -181,32 +164,32 @@ static async changeAndSaveSharpness(
       ];
     } else if (value > 0) {
       // If the value is positive, apply sharpening
-      const sharpeningFactor: number = (value / 400);
-      sharpenKernel = [
-        [-1, -1, -1],
-        [-1, 9 + sharpeningFactor, -1],
-        [-1, -1, -1],
-      ];
+      sharpenKernel = [ 
+        [0, -0.5, 0],
+        [-0.5, 3, -0.5],
+        [0, -0.5, 0]
+    ];
     } else {
       // If the value is negative, apply smoothing (blurring)
-      const smoothingFactor: number = (Math.abs(value) / 400);
       sharpenKernel = [
-        [0, 1 - smoothingFactor, 0],
-        [0, 0, 0],
-        [0 + smoothingFactor, 0, 0],
+        [0.1, 0.1, 0.1],
+        [0.1, 0.2, 0.1],
+        [0.1, 0.1, 0.1]
       ];
     }
 
     // Get the image data as a Buffer
-    const imageData: Buffer = image.bitmap.data;
+    let imageData: Buffer = image.bitmap.data;
 
     // Width and height of the image
     const width: number = image.bitmap.width;
     const height: number = image.bitmap.height;
-
     // Apply the custom convolution filter to sharpen the image
-    let data = Calculate.convolution(imageData, sharpenKernel, width, height);
-    image.bitmap.data = data
+    for (let i =0; i< Math.abs(value); i++) {
+      let data = Calculate.convolution(imageData, sharpenKernel, width, height);
+      imageData = data
+    }
+    image.bitmap.data = imageData
     await image.writeAsync(outputImagePath);
     console.log(`Success`);
   } catch (error) {
@@ -214,32 +197,7 @@ static async changeAndSaveSharpness(
   }
 }
 
-// static async changeAndSaveBrightnessCanvas(
-//   inputImage,
-//   output,
-//   brightness
-// ) {
-// var canvas = document.createElement("canvas");
-// canvas.id = "hello";
-// var context = canvas.getContext("2d");
-// var img = new Image();
-// img.onload = function () {
-//   context.drawImage(img, 0, 0);
-//   var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-//   var { r, g, b } = imageData.data;
-//   for (var i = 0; i < data.length; i += 4) {
-//     r += brightness; // increase red
-//     g += brightness; // increase green
-//     b += brightness; // increase blue
-//   }
-//   context.putImageData(imageData, 0, 0);
-//     var link = document.createElement("a");
-//     link.download = output;
-//     link.href = canvas.toDataURL("image/jpeg");
-//     link.click();
-//   };
-//   img.src = inputImage;
-// }
+
 
 //fixed
 //using hsv technique value is -100 to 100
