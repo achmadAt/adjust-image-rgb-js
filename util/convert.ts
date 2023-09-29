@@ -1,3 +1,15 @@
+// Functions Descriptions
+// Each color conversion function takes one or more color components (e.g., red, green, blue, hue, saturation, lightness) as input and returns an object containing the corresponding color components in the target color space.
+
+// These functions are helpful for tasks like color correction, color grading, and color analysis in image processing and computer graphics.
+
+// Note that these functions assume that the input color components are in the range [0, 255] or [0, 1], depending on the specific function. The output color components are typically in the same range.
+
+// These functions provide a convenient way to work with colors in different color spaces, making it easier to perform various color-related operations.
+
+// The code uses mathematical formulas and algorithms to perform the color conversions accurately and efficiently, taking into account the properties of different color spaces.
+
+//Converts an RGB color to its HSV (Hue, Saturation, Value) representation.
 export function rgbToHsv(r: number, g: number, b: number) {
   r /= 255;
   g /= 255;
@@ -29,37 +41,16 @@ export function rgbToHsv(r: number, g: number, b: number) {
 
   return { h, s, v };
 }
-// @rgbToHSL: (r, g, b) ->
-//     if typeof r is "object"
-//       g = r.g
-//       b = r.b
-//       r = r.r
 
-//     r /= 255
-//     g /= 255
-//     b /= 255
-
-//     max = Math.max r, g, b
-//     min = Math.min r, g, b
-//     l = (max + min) / 2
-
-//     if max is min
-//       h = s = 0
-//     else
-//       d = max - min
-//       s = if l > 0.5 then d / (2 - max - min) else d / (max + min)
-//       h = switch max
-//         when r then (g - b) / d + (if g < b then 6 else 0)
-//         when g then (b - r) / d + 2
-//         when b then (r - g) / d + 4
-      
-//       h /= 6
-
-//     h: h, s: s, l: l
-export function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-  r /= 255
-  g /= 255
-  b /= 255
+// Converts an RGB color to its HSL (Hue, Saturation, Lightness) representation.
+export function rgbToHsl(
+  r: number,
+  g: number,
+  b: number,
+): { h: number; s: number; l: number } {
+  r /= 255;
+  g /= 255;
+  b /= 255;
   let max = Math.max(r, g, b);
   let min = Math.min(r, g, b);
   let l = (max + min) / 2;
@@ -68,64 +59,71 @@ export function rgbToHsl(r: number, g: number, b: number): { h: number; s: numbe
   let s = 0;
 
   if (max === min) {
-      h = s = 0;
+    h = s = 0;
   } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-      switch (max) {
-          case r:
-              h = (g - b) / d + (g < b ? 6 : 0);
-              break;
-          case g:
-              h = (b - r) / d + 2;
-              break;
-          case b:
-              h = (r - g) / d + 4;
-              break;
-      }
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
 
-      h /= 6;
+    h /= 6;
   }
 
   return { h, s, l };
 }
 
+// convert only hue to number rgb
 function hueToRGB(p: number, q: number, t: number): number {
   if (t < 0) {
-      t += 1;
+    t += 1;
   }
   if (t > 1) {
-      t -= 1;
+    t -= 1;
   }
   if (t < 1 / 6) {
-      return p + (q - p) * 6 * t;
+    return p + (q - p) * 6 * t;
   }
   if (t < 1 / 2) {
-      return q;
+    return q;
   }
   if (t < 2 / 3) {
-      return p + (q - p) * (2 / 3 - t) * 6;
+    return p + (q - p) * (2 / 3 - t) * 6;
   }
   return p;
 }
 
-export function hslToRGB(h: number , s: number, l: number): { r: number; g: number; b: number } {
+// Converts an HSL color to its RGB representation.
+export function hslToRGB(
+  h: number,
+  s: number,
+  l: number,
+): { r: number; g: number; b: number } {
   if (s === 0) {
-      const r = l;
-      const g = l;
-      const b = l;
-      return { r: r * 255, g: g * 255, b: b * 255 };
+    const r = l;
+    const g = l;
+    const b = l;
+    return { r: r * 255, g: g * 255, b: b * 255 };
   } else {
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      const r = hueToRGB(p, q, h + 1 / 3);
-      const g = hueToRGB(p, q, h);
-      const b = hueToRGB(p, q, h - 1 / 3);
-      return { r: r * 255, g: g * 255, b: b * 255 };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const r = hueToRGB(p, q, h + 1 / 3);
+    const g = hueToRGB(p, q, h);
+    const b = hueToRGB(p, q, h - 1 / 3);
+    return { r: r * 255, g: g * 255, b: b * 255 };
   }
 }
 
+// Converts an HSV color to its RGB representation.
 export function hsvToRgb(h: number, s: number, v: number) {
   const i = Math.floor(h * 6);
   const f = h * 6 - i;
@@ -174,11 +172,13 @@ export function hsvToRgb(h: number, s: number, v: number) {
   };
 }
 
+// Calculates the luminance of an RGB color.
 export function getLuminance(r: number, g: number, b: number) {
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
   return luminance;
 }
 
+// Converts an RGB color to its CIE 1931 XYZ representation.
 export function rgbToXYZ(r: number, g: number, b: number) {
   r /= 255;
   g /= 255;
@@ -209,6 +209,7 @@ export function rgbToXYZ(r: number, g: number, b: number) {
   return { x: x * 100, y: y * 100, z: z * 100 };
 }
 
+// Converts a CIE 1931 XYZ color to its RGB representation.
 export function xyzToRGB(x: number, y: number, z: number) {
   x /= 100;
   y /= 100;
