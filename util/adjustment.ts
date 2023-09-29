@@ -46,6 +46,7 @@ static async changeAndSaveBrightnessLoop(
 }
 
 //fixed
+// value from -100 to 100
 static async changeAndSaveExposure(
   inputImagePath: string,
   outputImagePath: string,
@@ -92,7 +93,9 @@ static async changeAndSaveExposure(
   }
 }
 
-
+//from caman js
+// exposure
+// value from -100 to 100
 static async changeAndSaveExposureV2(
   inputImagePath: string,
   outputImagePath: string,
@@ -905,6 +908,8 @@ static async changeAndSaveShadow(
   }
 }
 
+// ## Highlight
+// value from -100 to 100
 static async changeAndSaveHighlight(
   inputImagePath: string,
   outputImagePath: string,
@@ -952,7 +957,7 @@ static async changeAndSaveBlacks(
   if (value < -100 || value > 100) {
     throw new Error('value value must be between -100 and 100');
   }
- value /= 0.5
+
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
