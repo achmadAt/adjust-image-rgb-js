@@ -952,7 +952,7 @@ static async changeAndSaveBlacks(
   if (value < -100 || value > 100) {
     throw new Error('value value must be between -100 and 100');
   }
-
+  value /= 10
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
