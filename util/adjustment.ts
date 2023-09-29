@@ -867,6 +867,43 @@ static async changeAndSaveTemperature(
   }
 }
 
+// ## tint
+// value from -100 to 100
+static async changeAndSaveTint(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  if (value < -100 || value > 100) {
+    throw new Error('value value must be between -100 and 100');
+  }
+ 
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    for (let x = 0; x < image.bitmap.width; x++) {
+      for (let y = 0; y < image.bitmap.height; y++) {
+        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+        let { r, g, b, a } = color;
+        let red = r + value;
+        let blue = b + value;
+        r = Math.min(255, Math.max(0, red));
+        b = Math.min(255, Math.max(0, blue));
+        const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+        image.setPixelColor(newColor, x, y);
+      }
+    }
+
+    await image.writeAsync(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
 // fixed
 //param value -100 to 100
 static async changeAndSaveShadow(
