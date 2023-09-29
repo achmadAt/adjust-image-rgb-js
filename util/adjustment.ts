@@ -139,7 +139,8 @@ static async changeAndSaveExposureV2(
 
 
 
-
+// value from -100 to 100
+// ## for sharpness using loop to applying the changes to buffer data
 static async changeAndSaveSharpness(
   inputImagePath: string,
   outputImagePath: string,
@@ -196,7 +197,9 @@ static async changeAndSaveSharpness(
   }
 }
 
-
+//for now the clarity is still using same technique with sharpness but without using loop
+// because clarity is just changing the color/contrast inside the middle of raw buffer
+// value from -100 to 100
 static async changeAndSaveClarity(
   inputImagePath: string,
   outputImagePath: string,
@@ -276,7 +279,7 @@ static async changeAndSaveSaturationHSV(
         let { r, g, b, a } = color;
         // console.log(color)
         let hsv = rgbToHsv(r, g, b);
-        hsv.s = Math.min(1, Math.max(0, hsv.s + value / 100));
+        hsv.s = Math.min(1, Math.max(0, hsv.s + value / 500));
         let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
         const newColor = Jimp.rgbaToInt(data.r, data.g, data.b, a);
 
