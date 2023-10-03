@@ -68,9 +68,6 @@ static async changeAndSaveExposure(
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
         let { r, g, b, a } = color;
-        // r = 255 * (1-Math.exp(-(r/255) * exposureFactor));
-        // g = 255 *(1-Math.exp(-(g/255) * exposureFactor));
-        // b = 255 *(1-Math.exp(-(b/255) * exposureFactor));
         r = Math.min(255, Math.max(0, Math.floor(r * exposureFactor)));
         g = Math.min(255, Math.max(0, Math.floor(g * exposureFactor)));
         b = Math.min(255, Math.max(0, Math.floor(b * exposureFactor)));
@@ -271,10 +268,7 @@ static async changeAndSaveSaturationHSV(
     if (value > 100 || value < -100) {
       throw new Error('value must be between 100 or -100');
     }
-    // const saturationDelta = Math.min(100, Math.max(-100, value));
-    // const saturationFactor = saturationDelta;
-    //const saturationFactor = Math.min(2, Math.max(0, value));
-
+   
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
@@ -1013,7 +1007,7 @@ static async changeAndSaveBlacks(
         const newLuminance = Math.min(255, Math.max(0, luminance + value));
 
         // Calculate the scaling factor to maintain the color ratio
-        const scalingFactor = newLuminance / luminance;
+        const scalingFactor = (newLuminance * 1.5) / (luminance * 1.5);
         
         r = Math.min(255, r * scalingFactor);
         g = Math.min(255, g * scalingFactor);
