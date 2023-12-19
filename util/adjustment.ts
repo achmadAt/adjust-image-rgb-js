@@ -45,6 +45,72 @@ static async changeAndSaveBrightnessLoop(
 }
 
 //fixed
+// # ## Contrast
+// # Increases or decreases the color contrast of the image.
+// #
+// # ### Arguments
+// # Range is -100 to 100. Values < 0 will decrease contrast while values > 0 will increase contrast.
+// # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values
+// # are usually around 5-10.
+static async changeAndSaveContrast(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  if (value > 100 || value < -100) {
+    throw new Error('value must be between -100 and 100');
+  }
+
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+
+    // // untuk mengubah contrast gunakan hasil dari adjust value ditambah 100 dibagi / 100 pangkat 2
+    // const contrastFactor = Math.pow((value + 100) / 100, 2);
+
+    // for (let x = 0; x < image.bitmap.width; x++) {
+    //   for (let y = 0; y < image.bitmap.height; y++) {
+    //     const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+
+    //     let { r, g, b, a } = color;
+
+    //     // Apply contrast adjustment to each color channel
+    //     // rubah contrast ke setiap pixel dengan cara
+    //     // pixel dibagi 255 dikurangi 0.5 terus di kalikan contrast facto terus di tambah 0.5
+    //     r = (r / 255 - 0.5) * contrastFactor + 0.5;
+    //     g = (g / 255 - 0.5) * contrastFactor + 0.5;
+    //     b = (b / 255 - 0.5) * contrastFactor + 0.5;
+
+    //     // Ensure the color values stay within the 0-255 range
+    //     r = Math.min(255, Math.max(0, r * 255));
+    //     g = Math.min(255, Math.max(0, g * 255));
+    //     b = Math.min(255, Math.max(0, b * 255));
+
+    //     const newColor = Jimp.rgbaToInt(r, g, b, a);
+
+    //     image.setPixelColor(newColor, x, y);
+    //   }
+    // }
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let dst: Mat = new cv.Mat()
+    let alpha = 1 + value
+    let beta = 128 - alpha * 128
+   cv.convertScaleAbs(src, dst, alpha, beta)
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+   
+    console.log(`Success`);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+//fixed
 // value from -100 to 100
 static async changeAndSaveExposure(
   inputImagePath: string,
@@ -444,60 +510,7 @@ static async changeAndSaveGreyScale(
   }
 }
 
-//fixed
-// # ## Contrast
-// # Increases or decreases the color contrast of the image.
-// #
-// # ### Arguments
-// # Range is -100 to 100. Values < 0 will decrease contrast while values > 0 will increase contrast.
-// # The contrast adjustment values are a bit sensitive. While unrestricted, sane adjustment values
-// # are usually around 5-10.
-static async changeAndSaveContrast(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number,
-) {
-  if (value > 100 || value < -100) {
-    throw new Error('value must be between -100 and 100');
-  }
 
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-
-    // untuk mengubah contrast gunakan hasil dari adjust value ditambah 100 dibagi / 100 pangkat 2
-    const contrastFactor = Math.pow((value + 100) / 100, 2);
-
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-        let { r, g, b, a } = color;
-
-        // Apply contrast adjustment to each color channel
-        // rubah contrast ke setiap pixel dengan cara
-        // pixel dibagi 255 dikurangi 0.5 terus di kalikan contrast facto terus di tambah 0.5
-        r = (r / 255 - 0.5) * contrastFactor + 0.5;
-        g = (g / 255 - 0.5) * contrastFactor + 0.5;
-        b = (b / 255 - 0.5) * contrastFactor + 0.5;
-
-        // Ensure the color values stay within the 0-255 range
-        r = Math.min(255, Math.max(0, r * 255));
-        g = Math.min(255, Math.max(0, g * 255));
-        b = Math.min(255, Math.max(0, b * 255));
-
-        const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`Success`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 
 
