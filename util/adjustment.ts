@@ -2,6 +2,8 @@ import Jimp from "jimp";
 import { rgbToHsv, hsvToRgb, getLuminance } from "./convert.ts";
 import Calculate from "./calculate.ts";
 import Curves from "./curve.ts";
+import { ImageData } from "canvas";
+import cv, { Mat } from "opencv-ts";
 
 class Adjustment {
 //fixed
@@ -19,27 +21,24 @@ static async changeAndSaveBrightnessLoop(
     throw new Error('value must be between 100 or -100');
   }
   // for image brigthnes value from -100 to 100
-  const brightnessFactor = Math.floor((value / 100) * 255);
-  console.log(brightnessFactor);
+  // const brightnessFactor = Math.floor((value / 100) * 255);
+  // console.log(brightnessFactor);
   try {
     const image = await Jimp.read(inputImagePath);
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let dst: Mat = new cv.Mat()
+    let alpha = 1 + value / 200
+    let beta = 0
+    cv.convertScaleAbs(src, dst, alpha, beta)
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+   
 
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-        let { r, g, b, a } = color;
-        r = Math.min(255, Math.max(0, r + brightnessFactor));
-        g = Math.min(255, Math.max(0, g + brightnessFactor));
-        b = Math.min(255, Math.max(0, b + brightnessFactor));
-        const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`sucess`);
   } catch (error) {
     console.error('Error:', error);
   }
@@ -60,7 +59,7 @@ static async changeAndSaveExposure(
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
-    const exposureFactor = Math.pow(2, value / 100);
+    const exposureFactor = Math.pow(2, value / 30.5);
     console.log(exposureFactor)
 
     for (let x = 0; x < image.bitmap.width; x++) {
@@ -531,7 +530,7 @@ static async changeAndSaveHue(
         // console.log(color)
         let hsv = rgbToHsv(r, g, b);
         hsv.h *= 100;
-        hsv.h += 100;
+        hsv.h += value;
         hsv.h = hsv.h % 100;
         hsv.h /= 100;
         let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
@@ -600,7 +599,7 @@ static async changeAndSaveGamma(
 
 
 static isWhite(r: number, g: number, b : number) {
-  const treshold = 200;
+  const treshold = 170;
   if (r >= treshold && g >= treshold && b >= treshold){
     return true
   }
@@ -630,9 +629,9 @@ static async changeAndSaveWhites(
         if (luminance > 200) {
           if (Adjustment.isWhite(r,g,b)) {
           
-            r = Adjustment.clamp(luminance + value, 0, 255);
-            g = Adjustment.clamp(luminance + value, 0, 255);
-            b = Adjustment.clamp(luminance + value, 0, 255);
+            r = Adjustment.clamp(r + (value / 5), 0, 255);
+            g = Adjustment.clamp(g +  (value / 5), 0, 255);
+            b = Adjustment.clamp(b +  (value / 5), 0, 255);
             const newColor = Jimp.rgbaToInt(r, g, b, a);
   
             image.setPixelColor(newColor, x, y);
@@ -934,9 +933,6 @@ static async changeAndSaveShadow(
   try {
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
-
-    // const normalizedvalue = Math.pow(2, value / 100);
-    // console.log(normalizedvalue);
     const maxFactor = 200;
 
     for (let x = 0; x < image.bitmap.width; x++) {
@@ -946,8 +942,6 @@ static async changeAndSaveShadow(
         let { r, g, b, a } = color;
         const brightness = Adjustment.calculateBrightness(r, g, b);
         if (brightness < maxFactor) {
-          //const adjustedBrightness = brightness + value * (brightness - 255);
-          // const pixelNew = Math.max(adjustedBrightness, 255);
           r = Adjustment.clamp(r - value, 0, 255);
           g = Adjustment.clamp(g - value, 0, 255);
           b = Adjustment.clamp(b - value, 0, 255);
@@ -995,8 +989,7 @@ static async changeAndSaveHighlight(
         let { r, g, b, a } = color;
         const brightness = Adjustment.calculateBrightness(r, g, b);
         if (brightness > maxFactor) {
-          //const adjustedBrightness = brightness + value * (brightness - 255);
-          // const pixelNew = Math.max(adjustedBrightness, 255);
+          
           r = Adjustment.clamp(r + value, 0, 255);
           g = Adjustment.clamp(g + value, 0, 255);
           b = Adjustment.clamp(b + value, 0, 255);
@@ -1014,7 +1007,7 @@ static async changeAndSaveHighlight(
 }
 
 static isBlacks(r: number, g: number, b : number) {
-  const treshold = 60;
+  const treshold = 170;
   if (r <= treshold && g <= treshold && b <= treshold){
     return true
   }
@@ -1037,8 +1030,6 @@ static async changeAndSaveBlacks(
     // Read the input image using Jimp
     const image = await Jimp.read(inputImagePath);
 
-    const normalizedvalue = (value + 100) / 100;
-    console.log(normalizedvalue);
     for (let x = 0; x < image.bitmap.width; x++) {
       for (let y = 0; y < image.bitmap.height; y++) {
         const color = Jimp.intToRGBA(image.getPixelColor(x, y));
@@ -1046,12 +1037,12 @@ static async changeAndSaveBlacks(
         let { r, g, b, a } = color;
         
         let luminance = Adjustment.calculateBrightness(r,g,b)
-        if (luminance < 60) {
+        if (luminance < 170) {
           if (Adjustment.isBlacks(r,g,b)) {
           
-            r = Adjustment.clamp(luminance - value, 0, 255);
-            g = Adjustment.clamp(luminance - value, 0, 255);
-            b = Adjustment.clamp(luminance - value, 0, 255);
+            r = Adjustment.clamp(r - value, 0, 255);
+            g = Adjustment.clamp(g - value, 0, 255);
+            b = Adjustment.clamp(b - value, 0, 255);
             const newColor = Jimp.rgbaToInt(r, g, b, a);
   
             image.setPixelColor(newColor, x, y);
