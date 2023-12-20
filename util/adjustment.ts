@@ -85,6 +85,41 @@ static async changeAndSaveContrast(
 }
 
 //fixed
+//using hsv technique value is -100 to 100
+static async changeAndSaveSaturationHSV(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  value /= 200
+  try {
+    const image = await Jimp.read(inputImagePath);
+
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let hsvImage = new cv.Mat();
+    cv.cvtColor(src, hsvImage, cv.COLOR_BGR2HSV);
+    // Loop through each pixel and adjust the saturation channel
+    for (let i = 0; i < hsvImage.rows; i++) {
+      for (let j = 0; j < hsvImage.cols; j++) {
+        hsvImage.ucharPtr(i, j)[1] = Math.max(0, Math.min(255, hsvImage.ucharPtr(i, j)[1] * (1 + value)));
+      }
+    }
+    let dst = new cv.Mat();
+    cv.cvtColor(hsvImage, dst, cv.COLOR_HSV2BGR);
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+    console.log(`success`);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+//fixed
 // value from -100 to 100
 static async changeAndSaveExposure(
   inputImagePath: string,
@@ -294,41 +329,7 @@ static async changeAndSaveClarity(
   }
 }
 
-//fixed
-//using hsv technique value is -100 to 100
-static async changeAndSaveSaturationHSV(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number,
-) {
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-    if (value > 100 || value < -100) {
-      throw new Error('value must be between 100 or -100');
-    }
-   
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
-        let { r, g, b, a } = color;
-        // console.log(color)
-        let hsv = rgbToHsv(r, g, b);
-        hsv.s = Math.min(1, Math.max(0, hsv.s + value / 500));
-        let data = hsvToRgb(hsv.h, hsv.s, hsv.v);
-        const newColor = Jimp.rgbaToInt(data.r, data.g, data.b, a);
-
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`success`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 //from caman
 // # ## Saturation
