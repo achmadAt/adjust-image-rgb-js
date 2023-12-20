@@ -119,6 +119,43 @@ static async changeAndSaveSaturationHSV(
   }
 }
 
+
+
+static async changeAndSaveHighlight(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number
+) {
+  if (value < -100 || value > 100) {
+    throw new Error("value value must be between -100 and 100");
+  }
+  try {
+    value /= 800
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let labImage = new cv.Mat()
+    cv.cvtColor(src, labImage, cv.COLOR_BGR2Lab);
+    for (let i = 0; i < labImage.rows; i++) {
+      for (let j = 0; j < labImage.cols; j++) {
+        labImage.ucharPtr(i, j)[0] = Math.max(0, Math.min(255, labImage.ucharPtr(i, j)[0] * (1 + value)));
+      }
+    }
+    let dst = new cv.Mat();
+    cv.cvtColor(labImage, dst, cv.COLOR_Lab2BGR);
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
 //fixed
 // value from -100 to 100
 static async changeAndSaveExposure(
@@ -585,6 +622,15 @@ static async changeAndSaveGamma(
 }
 
 
+// ## Highlight
+// value from -100 to 100
+static calculateBrightness(r: number, g: number, b: number) {
+  //  Calculate brightness as the weighted sum of color channels
+  let brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+  return brightness;
+}
+
+static clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
 static isWhite(r: number, g: number, b : number) {
   const treshold = 170;
@@ -947,52 +993,7 @@ static async changeAndSaveShadow(
   }
 }
 
-// ## Highlight
-// value from -100 to 100
-static calculateBrightness(r: number, g: number, b: number) {
-  //  Calculate brightness as the weighted sum of color channels
-  let brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-  return brightness;
-}
 
-static clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
-
-static async changeAndSaveHighlight(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number
-) {
-  if (value < -50 || value > 50) {
-    throw new Error("value value must be between -100 and 100");
-  }
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-    const maxFactor = 200;
-
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const pixel = image.getPixelColor(x, y);
-        const color = Jimp.intToRGBA(pixel);
-        let { r, g, b, a } = color;
-        const brightness = Adjustment.calculateBrightness(r, g, b);
-        if (brightness > maxFactor) {
-          
-          r = Adjustment.clamp(r + value, 0, 255);
-          g = Adjustment.clamp(g + value, 0, 255);
-          b = Adjustment.clamp(b + value, 0, 255);
-          
-        }
-        const newColor = Jimp.rgbaToInt(r, g, b, a);
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-    await image.writeAsync(outputImagePath);
-    console.log(`Success`);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
 
 static isBlacks(r: number, g: number, b : number) {
   const treshold = 170;
