@@ -6,6 +6,8 @@ import { ImageData } from "canvas";
 import cv, { Mat } from "opencv-ts";
 
 class Adjustment {
+
+//OpenCV
 //fixed
 // # ## Brightness
 // # Simple brightness adjustment
@@ -44,6 +46,7 @@ static async changeAndSaveBrightnessLoop(
   }
 }
 
+//OpenCv
 //fixed
 // # ## Contrast
 // # Increases or decreases the color contrast of the image.
@@ -84,6 +87,7 @@ static async changeAndSaveContrast(
   }
 }
 
+//OpenCV
 //fixed
 //using hsv technique value is -100 to 100
 static async changeAndSaveSaturationHSV(
@@ -120,7 +124,7 @@ static async changeAndSaveSaturationHSV(
 }
 
 
-
+//OpenCv
 static async changeAndSaveHighlight(
   inputImagePath: string,
   outputImagePath: string,
@@ -155,6 +159,45 @@ static async changeAndSaveHighlight(
     console.error("Error:", error);
   }
 }
+
+// fixed
+//param value -50 to 50
+static async changeAndSaveShadow(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  if (value < -100 || value > 100) {
+    throw new Error('value value must be between -100 and 100');
+  }
+  value /= 2
+  try {
+    // Read the input image using Jimp
+    const image = await Jimp.read(inputImagePath);
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let labImage = new cv.Mat()
+    cv.cvtColor(src, labImage, cv.COLOR_BGR2Lab);
+    for (let i = 0; i < labImage.rows; i++) {
+      for (let j = 0; j < labImage.cols; j++) {
+        labImage.ucharPtr(i, j)[0] = Math.min(255, Math.max(0, labImage.ucharPtr(i, j)[0] + value));
+      }
+    }
+    let dst = new cv.Mat();
+    cv.cvtColor(labImage, dst, cv.COLOR_Lab2BGR);
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+    console.log(`Success`);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+
 
 //fixed
 // value from -100 to 100
@@ -942,46 +985,6 @@ static async changeAndSaveTint(
         b = Math.min(255, Math.max(0, blue));
         const newColor = Jimp.rgbaToInt(r, g, b, a);
 
-        image.setPixelColor(newColor, x, y);
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`Success`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-// fixed
-//param value -50 to 50
-static async changeAndSaveShadow(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number,
-) {
-  if (value < -50 || value > 50) {
-    throw new Error('value value must be between -100 and 100');
-  }
-
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-    const maxFactor = 200;
-
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const pixel = image.getPixelColor(x, y);
-        const color = Jimp.intToRGBA(pixel);
-        let { r, g, b, a } = color;
-        const brightness = Adjustment.calculateBrightness(r, g, b);
-        if (brightness < maxFactor) {
-          r = Adjustment.clamp(r - value, 0, 255);
-          g = Adjustment.clamp(g - value, 0, 255);
-          b = Adjustment.clamp(b - value, 0, 255);
-          
-        }
-        const newColor = Jimp.rgbaToInt(r, g, b, a);
         image.setPixelColor(newColor, x, y);
       }
     }
