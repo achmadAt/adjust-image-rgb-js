@@ -160,6 +160,7 @@ static async changeAndSaveHighlight(
   }
 }
 
+//OpenCv
 // fixed
 //param value -50 to 50
 static async changeAndSaveShadow(
@@ -197,7 +198,41 @@ static async changeAndSaveShadow(
   }
 }
 
-
+//fixed
+// value param -50 to 50
+static async changeAndSaveWhites(
+  inputImagePath: string,
+  outputImagePath: string,
+  value: number,
+) {
+  if (value > 100 || value < -100) {
+    throw new Error('value must be between -100 and 100');
+  }
+  try {
+    // Read the input image using Jimp
+    value /= 400
+    const image = await Jimp.read(inputImagePath);
+    const { data, width, height } = image.bitmap;
+    const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+    let src = cv.matFromImageData(imageData)
+    let labImage = new cv.Mat()
+    cv.cvtColor(src, labImage, cv.COLOR_BGR2Lab);
+    for (let i = 0; i < labImage.rows; i++) {
+      for (let j = 0; j < labImage.cols; j++) {
+        labImage.ucharPtr(i, j)[0] = Math.min(255, Math.max(0, labImage.ucharPtr(i, j)[0] * (1 + value)));
+      }
+    }
+    let dst = new cv.Mat();
+    cv.cvtColor(labImage, dst, cv.COLOR_Lab2BGR);
+    new Jimp({
+      width: dst.cols,
+      height: dst.rows,
+      data: Buffer.from(dst.data),
+    }).write(outputImagePath);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
 
 //fixed
 // value from -100 to 100
@@ -684,46 +719,7 @@ static isWhite(r: number, g: number, b : number) {
   return false
 }
 
-//fixed
-// value param -50 to 50
-static async changeAndSaveWhites(
-  inputImagePath: string,
-  outputImagePath: string,
-  value: number,
-) {
-  if (value > 100 || value < -100) {
-    throw new Error('value must be between -100 and 100');
-  }
-  try {
-    // Read the input image using Jimp
-    const image = await Jimp.read(inputImagePath);
-    for (let x = 0; x < image.bitmap.width; x++) {
-      for (let y = 0; y < image.bitmap.height; y++) {
-        const color = Jimp.intToRGBA(image.getPixelColor(x, y));
 
-        let { r, g, b, a } = color;
-        let luminance = Adjustment.calculateBrightness(r,g,b)
-        if (luminance > 200) {
-          if (Adjustment.isWhite(r,g,b)) {
-          
-            r = Adjustment.clamp(r + (value / 5), 0, 255);
-            g = Adjustment.clamp(g +  (value / 5), 0, 255);
-            b = Adjustment.clamp(b +  (value / 5), 0, 255);
-            const newColor = Jimp.rgbaToInt(r, g, b, a);
-  
-            image.setPixelColor(newColor, x, y);
-          }
-        }
-        
-      }
-    }
-
-    await image.writeAsync(outputImagePath);
-    console.log(`success`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 //fixed
 // # ## Invert
