@@ -338,7 +338,7 @@ class Adjustment {
       }
       let dst = new cv.Mat();
       cv.cvtColor(labImage, dst, cv.COLOR_Lab2BGR);
-      console.log(dst.type())
+      console.log(dst.type());
       new Jimp({
         width: dst.cols,
         height: dst.rows,
@@ -400,188 +400,120 @@ class Adjustment {
       throw new Error("Clarity level must be between -100 and 100");
     }
 
-    value /= 200
+    value /= 200;
     try {
-     // Read the input image using Jimp
-     const image = await Jimp.read(inputImagePath);
-     const { data, width, height } = image.bitmap;
-     const imageData = new ImageData(
-       new Uint8ClampedArray(data),
-       width,
-       height
-     );
-     let src = cv.matFromImageData(imageData);
-     let lab = new cv.Mat();
-     cv.cvtColor(src, lab, cv.COLOR_BGR2Lab);
+      // Read the input image using Jimp
+      const image = await Jimp.read(inputImagePath);
+      const { data, width, height } = image.bitmap;
+      const imageData = new ImageData(
+        new Uint8ClampedArray(data),
+        width,
+        height
+      );
+      let src = cv.matFromImageData(imageData);
+      let lab = new cv.Mat();
+      cv.cvtColor(src, lab, cv.COLOR_BGR2Lab);
 
-     //use this because encountering type error when used in cv.addWeighted
-     let src2 = new cv.Mat()
-     cv.cvtColor(lab, src2, cv.COLOR_Lab2BGR)
-     // split the channels
-     let channels = new cv.MatVector()
-     cv.split(lab, channels)
-     let clahe = new cv.CLAHE(2.0)
-     clahe.apply(channels.get(0), channels.get(0))
-     cv.merge(channels, lab)
-     let bgr = new cv.Mat();
-     cv.cvtColor(lab, bgr, cv.COLOR_Lab2BGR);
-     let dst = new cv.Mat()
-     console.log(src.rows, src.cols, src2.type())
-     console.log(bgr.rows, bgr.cols, bgr.type())
-     cv.addWeighted(src2, 1- value, bgr, value, 0, dst)
-     new Jimp({
-       width: dst.cols,
-       height: dst.rows,
-       data: Buffer.from(dst.data),
-     }).write(outputImagePath);
+      //use this because encountering type error when used in cv.addWeighted
+      let src2 = new cv.Mat();
+      cv.cvtColor(lab, src2, cv.COLOR_Lab2BGR);
+      // split the channels
+      let channels = new cv.MatVector();
+      cv.split(lab, channels);
+      let clahe = new cv.CLAHE(2.0);
+      clahe.apply(channels.get(0), channels.get(0));
+      cv.merge(channels, lab);
+      let bgr = new cv.Mat();
+      cv.cvtColor(lab, bgr, cv.COLOR_Lab2BGR);
+      let dst = new cv.Mat();
+      console.log(src.rows, src.cols, src2.type());
+      console.log(bgr.rows, bgr.cols, bgr.type());
+      cv.addWeighted(src2, 1 - value, bgr, value, 0, dst);
+      new Jimp({
+        width: dst.cols,
+        height: dst.rows,
+        data: Buffer.from(dst.data),
+      }).write(outputImagePath);
     } catch (error) {
       console.error("Error:", error);
     }
   }
 
+  //OpenCV
   //fixed
-  // value from -100 to 100
-  static async changeAndSaveExposure(
+  // param value -100 to 100
+  static async changeAndSaveTemperature(
     inputImagePath: string,
     outputImagePath: string,
     value: number
   ) {
     if (value < -100 || value > 100) {
-      throw new Error("Exposure value must be between -100 and 100");
+      throw new Error("value value must be between -100 and 100");
     }
-
     try {
+      value /= 2;
       // Read the input image using Jimp
       const image = await Jimp.read(inputImagePath);
-
-      const exposureFactor = Math.pow(2, value / 30.5);
-      console.log(exposureFactor);
-
-      for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-          const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-          let { r, g, b, a } = color;
-          r = Math.min(255, Math.max(0, Math.floor(r * exposureFactor)));
-          g = Math.min(255, Math.max(0, Math.floor(g * exposureFactor)));
-          b = Math.min(255, Math.max(0, Math.floor(b * exposureFactor)));
-
-          // Ensure the color values stay within the 0-255 range
-          r = Math.min(255, Math.max(0, r));
-          g = Math.min(255, Math.max(0, g));
-          b = Math.min(255, Math.max(0, b));
-          const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-          image.setPixelColor(newColor, x, y);
+      const { data, width, height } = image.bitmap;
+      const imageData = new ImageData(
+        new Uint8ClampedArray(data),
+        width,
+        height
+      );
+      let src = cv.matFromImageData(imageData);
+      for (let i = 0; i < src.rows; i++) {
+        for (let j = 0; j < src.cols; j++) {
+          // Shift blue and red channels in opposite directions
+          src.ptr(i,j)[0] = Math.min(Math.max(src.ptr(i,j)[0] - value, 0), 255);
+          src.ptr(i,j)[2] = Math.min(Math.max(src.ptr(i,j)[2] + value, 0), 255);
         }
       }
-
-      await image.writeAsync(outputImagePath);
+      new Jimp({
+        width: src.cols,
+        height: src.rows,
+        data: Buffer.from(src.data),
+      }).write(outputImagePath);
       console.log(`Success`);
     } catch (error) {
       console.error("Error:", error);
     }
   }
 
-  //from caman js
-  // exposure
+  // ## tint
   // value from -100 to 100
-  static async changeAndSaveExposureV2(
+  static async changeAndSaveTint(
     inputImagePath: string,
     outputImagePath: string,
     value: number
   ) {
     if (value < -100 || value > 100) {
-      throw new Error("Exposure value must be between -100 and 100");
+      throw new Error("value value must be between -100 and 100");
     }
 
     try {
+      value /= 2;
       // Read the input image using Jimp
       const image = await Jimp.read(inputImagePath);
+      const { data, width, height } = image.bitmap;
+      const imageData = new ImageData(
+        new Uint8ClampedArray(data),
+        width,
+        height
+      );
+      let src = cv.matFromImageData(imageData);
 
-      const p = Math.abs(value) / 100;
-
-      let ctrl1 = [0, 255 * p];
-      let ctrl2 = [255 - 255 * p, 255];
-      console.log(ctrl1);
-      if (value < 0) {
-        ctrl1 = ctrl1.reverse();
-        ctrl2 = ctrl2.reverse();
+      for (let i = 0; i < src.rows; i++) {
+        for (let j = 0; j < src.cols; j++) {
+          src.ptr(i,j)[0] = Math.min(Math.max(src.ptr(i,j)[0] + value, 0), 255);
+          src.ptr(i,j)[2] = Math.min(Math.max(src.ptr(i,j)[2] + value, 0), 255);
       }
-      for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-          const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-          let { r, g, b, a } = color;
-          let data = Curves.curvesToRgbf(
-            "rgb",
-            [0, 0],
-            ctrl1,
-            ctrl2,
-            [255, 255]
-          )({ r: r, g: g, b: b });
-          r = Math.min(255, data.r);
-          g = Math.min(255, data.g);
-          b = Math.min(255, data.b);
-          const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-          image.setPixelColor(newColor, x, y);
-        }
-      }
-
-      await image.writeAsync(outputImagePath);
+    }
+      new Jimp({
+        width: src.cols,
+        height: src.rows,
+        data: Buffer.from(src.data),
+      }).write(outputImagePath);
       console.log(`Success`);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
-
-  //from caman
-  // # ## Saturation
-  // # Adjusts the color saturation of the image.
-  // #
-  // # ### Arguments
-  // # Range is -100 to 100. Values < 0 will desaturate the image while values > 0 will saturate it.
-  // # **If you want to completely desaturate the image**, using the greyscale filter is highly
-  // # recommended because it will yield better results.
-  static async changeAndSaveSaturationRGB(
-    inputImagePath: string,
-    outputImagePath: string,
-    value: number
-  ) {
-    try {
-      // Read the input image using Jimp
-      const image = await Jimp.read(inputImagePath);
-      if (value > 100 || value < -100) {
-        throw new Error("value must be between 100 or -100");
-      }
-
-      // untuk menambah saturation dengan dikalikan dengan standar value untuk saturation
-      const saturationCorrection = value * -0.01;
-      for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-          const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-          let { r, g, b, a } = color;
-          // mencari maximal value dari pixel r g b
-          const max = Math.max(r, g, b);
-          // jika pixel tidak sama dengan angka terbesar dari di antar r g b
-          // maka pixel ditambah angkah maximal dari di antara r g b maka pixel tersebut di tambah hasil dari angak maximal dikurang pixel yang di kali dengan standard value dari saturasi correction
-          if (r !== max) r += (max - r) * saturationCorrection;
-          if (g !== max) g += (max - g) * saturationCorrection;
-          if (b !== max) b += (max - b) * saturationCorrection;
-
-          r = Math.min(255, Math.max(0, r));
-          g = Math.min(255, Math.max(0, g));
-          b = Math.min(255, Math.max(0, b));
-
-          const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-          image.setPixelColor(newColor, x, y);
-        }
-      }
-
-      await image.writeAsync(outputImagePath);
-      console.log(`success`);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -785,26 +717,6 @@ class Adjustment {
     }
   }
 
-  // ## Highlight
-  // value from -100 to 100
-  static calculateBrightness(r: number, g: number, b: number) {
-    //  Calculate brightness as the weighted sum of color channels
-    let brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-    return brightness;
-  }
-
-  static clamp = (num: number, min: number, max: number) =>
-    Math.min(Math.max(num, min), max);
-
-  static isWhite(r: number, g: number, b: number) {
-    const treshold = 170;
-    if (r >= treshold && g >= treshold && b >= treshold) {
-      return true;
-    }
-
-    return false;
-  }
-
   //fixed
   // # ## Invert
   // # Inverts all colors in the image by subtracting each color channel value from 255. No arguments.
@@ -998,89 +910,6 @@ class Adjustment {
     } catch (error) {
       console.error("Error:", error);
     }
-  }
-
-  //fixed
-  // param value -100 to 100
-  static async changeAndSaveTemperature(
-    inputImagePath: string,
-    outputImagePath: string,
-    value: number
-  ) {
-    if (value < -100 || value > 100) {
-      throw new Error("value value must be between -100 and 100");
-    }
-
-    try {
-      // Read the input image using Jimp
-      const image = await Jimp.read(inputImagePath);
-
-      for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-          const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-          let { r, g, b, a } = color;
-          let red = r + value;
-          let blue = b - value;
-          r = Math.min(255, Math.max(0, red));
-          b = Math.min(255, Math.max(0, blue));
-          const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-          image.setPixelColor(newColor, x, y);
-        }
-      }
-
-      await image.writeAsync(outputImagePath);
-      console.log(`Success`);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
-
-  // ## tint
-  // value from -100 to 100
-  static async changeAndSaveTint(
-    inputImagePath: string,
-    outputImagePath: string,
-    value: number
-  ) {
-    if (value < -100 || value > 100) {
-      throw new Error("value value must be between -100 and 100");
-    }
-
-    try {
-      // Read the input image using Jimp
-      const image = await Jimp.read(inputImagePath);
-
-      for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-          const color = Jimp.intToRGBA(image.getPixelColor(x, y));
-
-          let { r, g, b, a } = color;
-          let red = r + value;
-          let blue = b + value;
-          r = Math.min(255, Math.max(0, red));
-          b = Math.min(255, Math.max(0, blue));
-          const newColor = Jimp.rgbaToInt(r, g, b, a);
-
-          image.setPixelColor(newColor, x, y);
-        }
-      }
-
-      await image.writeAsync(outputImagePath);
-      console.log(`Success`);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
-
-  static isBlacks(r: number, g: number, b: number) {
-    const treshold = 170;
-    if (r <= treshold && g <= treshold && b <= treshold) {
-      return true;
-    }
-
-    return false;
   }
 }
 
