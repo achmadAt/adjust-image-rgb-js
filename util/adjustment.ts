@@ -400,6 +400,7 @@ class Adjustment {
       throw new Error("Clarity level must be between -100 and 100");
     }
 
+    value /= 200
     try {
      // Read the input image using Jimp
      const image = await Jimp.read(inputImagePath);

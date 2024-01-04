@@ -1,5 +1,6 @@
 # need to implement
 
 - temperature
-- clarity
-- sharpness
+- clarity [o]
+- sharpness [o]
+- exposure
