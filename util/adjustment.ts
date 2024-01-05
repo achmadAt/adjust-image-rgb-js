@@ -464,8 +464,14 @@ class Adjustment {
       for (let i = 0; i < src.rows; i++) {
         for (let j = 0; j < src.cols; j++) {
           // Shift blue and red channels in opposite directions
-          src.ptr(i,j)[0] = Math.min(Math.max(src.ptr(i,j)[0] - value, 0), 255);
-          src.ptr(i,j)[2] = Math.min(Math.max(src.ptr(i,j)[2] + value, 0), 255);
+          src.ptr(i, j)[0] = Math.min(
+            Math.max(src.ptr(i, j)[0] - value, 0),
+            255
+          );
+          src.ptr(i, j)[2] = Math.min(
+            Math.max(src.ptr(i, j)[2] + value, 0),
+            255
+          );
         }
       }
       new Jimp({
@@ -479,6 +485,7 @@ class Adjustment {
     }
   }
 
+  //OpenCv
   // ## tint
   // value from -100 to 100
   static async changeAndSaveTint(
@@ -504,10 +511,66 @@ class Adjustment {
 
       for (let i = 0; i < src.rows; i++) {
         for (let j = 0; j < src.cols; j++) {
-          src.ptr(i,j)[0] = Math.min(Math.max(src.ptr(i,j)[0] + value, 0), 255);
-          src.ptr(i,j)[2] = Math.min(Math.max(src.ptr(i,j)[2] + value, 0), 255);
+          src.ptr(i, j)[0] = Math.min(
+            Math.max(src.ptr(i, j)[0] + value, 0),
+            255
+          );
+          src.ptr(i, j)[2] = Math.min(
+            Math.max(src.ptr(i, j)[2] + value, 0),
+            255
+          );
+        }
       }
+      new Jimp({
+        width: src.cols,
+        height: src.rows,
+        data: Buffer.from(src.data),
+      }).write(outputImagePath);
+      console.log(`Success`);
+    } catch (error) {
+      console.error("Error:", error);
     }
+  }
+
+  //OpenCv
+  //fixed
+  // value from -100 to 100
+  static async changeAndSaveExposure(
+    inputImagePath: string,
+    outputImagePath: string,
+    value: number
+  ) {
+    if (value < -100 || value > 100) {
+      throw new Error("Exposure value must be between -100 and 100");
+    }
+
+    try {
+      value /= 400
+      const image = await Jimp.read(inputImagePath);
+      const { data, width, height } = image.bitmap;
+      const imageData = new ImageData(
+        new Uint8ClampedArray(data),
+        width,
+        height
+      );
+      let src = cv.matFromImageData(imageData);
+      const rows = src.rows;
+      const cols = src.cols;
+      const channels = src.channels();
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          for (let c = 0; c < channels; c++) {
+            const pixel = src.ucharPtr(y, x)[c];
+            const adjustedPixel = Math.min(
+              255,
+              Math.round(255 * Math.pow(pixel / 255.0, value * -1 + 1))
+            );
+            src.ucharPtr(y, x)[c] = adjustedPixel;
+          }
+        }
+      }
+
       new Jimp({
         width: src.cols,
         height: src.rows,
