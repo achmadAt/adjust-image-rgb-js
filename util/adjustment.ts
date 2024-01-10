@@ -78,7 +78,7 @@ class Adjustment {
       );
       let src = cv.matFromImageData(imageData);
       let dst = new cv.Mat();
-      let alpha = 1 + value / 100;
+      let alpha = 1 + value / 200;
       let beta = 128 - alpha * 128;
       cv.convertScaleAbs(src, dst, alpha, beta);
       new Jimp({
@@ -359,7 +359,6 @@ class Adjustment {
     if (value < -100 || value > 100) {
       throw new Error("Exposure value must be between -100 and 100");
     }
-    value;
     try {
       // Read the input image using Jimp
       value /= 30;
@@ -465,11 +464,11 @@ class Adjustment {
         for (let j = 0; j < src.cols; j++) {
           // Shift blue and red channels in opposite directions
           src.ptr(i, j)[0] = Math.min(
-            Math.max(src.ptr(i, j)[0] - value, 0),
+            Math.max(src.ptr(i, j)[0] + value, 0),
             255
           );
           src.ptr(i, j)[2] = Math.min(
-            Math.max(src.ptr(i, j)[2] + value, 0),
+            Math.max(src.ptr(i, j)[2] - value, 0),
             255
           );
         }
@@ -545,7 +544,12 @@ class Adjustment {
     }
 
     try {
-      value /= 400
+      if (value > 0) {
+        value /= 110
+      }
+      if (value < 0) {
+        value /= 20
+      }
       const image = await Jimp.read(inputImagePath);
       const { data, width, height } = image.bitmap;
       const imageData = new ImageData(
