@@ -14,7 +14,7 @@ class Adjustment {
   // #
   // # ### Arguments
   // # Range is -100 to 100. Values < 0 will darken image while values > 0 will brighten.
-  static async changeAndSaveBrightnessLoop(
+  static async changeAndSaveBrightnesAlpha(
     inputImagePath: string,
     outputImagePath: string,
     value: number
@@ -48,6 +48,39 @@ class Adjustment {
     }
   }
 
+  static async changeAndSaveBrightnesBeta(
+    inputImagePath: string,
+    outputImagePath: string,
+    value: number
+  ) {
+    if (value > 100 || value < -100) {
+      throw new Error("value must be between 100 or -100");
+    }
+    // for image brigthnes value from -100 to 100
+    // const brightnessFactor = Math.floor((value / 100) * 255);
+    // console.log(brightnessFactor);
+    try {
+      const image = await Jimp.read(inputImagePath);
+      const { data, width, height } = image.bitmap;
+      const imageData = new ImageData(
+        new Uint8ClampedArray(data),
+        width,
+        height
+      );
+      let src = cv.matFromImageData(imageData);
+      let dst = new cv.Mat();
+      let alpha = 0;
+      let beta = 1 + value / 200;
+      cv.convertScaleAbs(src, dst, alpha, beta);
+      new Jimp({
+        width: dst.cols,
+        height: dst.rows,
+        data: Buffer.from(dst.data),
+      }).write(outputImagePath);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
   //OpenCv
   //fixed
   // # ## Contrast
@@ -290,13 +323,13 @@ class Adjustment {
     outputImagePath: string,
     value: number
   ) {
-    if (value < -50 || value > 50) {
+    if (value < -100 || value > 100) {
       throw new Error("value value must be between -100 and 100");
     }
 
     try {
       // Read the input image using Jimp
-      value /= 200;
+      value /= 400;
       const image = await Jimp.read(inputImagePath);
       const { data, width, height } = image.bitmap;
       const imageData = new ImageData(
@@ -338,7 +371,6 @@ class Adjustment {
       }
       let dst = new cv.Mat();
       cv.cvtColor(labImage, dst, cv.COLOR_Lab2BGR);
-      console.log(dst.type());
       new Jimp({
         width: dst.cols,
         height: dst.rows,

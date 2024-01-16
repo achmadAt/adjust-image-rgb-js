@@ -1,2 +1,2 @@
 import Adjustment from "./util/adjustment.ts";
-Adjustment.changeAndSaveExposure('img10.jpg', 'img10_edited.jpg', 100);
+Adjustment.changeAndSaveBrightnesAlpha('input.jpeg', 'edited_jimp.jpg', -100);
